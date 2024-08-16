@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  Nome  String
+  CPF   Int    @unique
+  Email String @unique
+  Hash  String
+  Salt  String
+
+  Produto Produto[]
+
+  cupons Cupons[]
+
+  favoritos Favoritos?
+  carrinho  Carrinho?
+}
+
+model Produto {
+  id              Int    @id @default(autoincrement())
+  Nome            String
+  Categoria       String
+  Preco           Int
+  Caracteristicas String
+  Foto            String
+  Avaliacao       Float  @default(0)
+
+  usuario   User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId Int
+
+  favoritos       Favoritos[]
+  ProdutoCarrinho ProdutoCarrinho[]
+}
+
+model Cupons {
+  id       Int      @id @default(autoincrement())
+  Codigo   String   @unique
+  Desconto Int
+  Validade DateTime
+  Regras   String
+
+  usuario  User[]
+  carrinho Carrinho[]
+}
+
+model Carrinho {
+  usuarioId Int  @id @default(autoincrement())
+  usuario   User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  cupom   Cupons[]
+  produto ProdutoCarrinho[]
+}
+
+model Favoritos {
+  usuarioId Int  @id @default(autoincrement())
+  usuario   User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  Produto Produto[]
+}
+
+model ProdutoCarrinho {
+  usuarioId Int      @default(autoincrement())
+  carrinho  Carrinho @relation(fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
+
+  produtoId Int
+  produto   Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, produtoId])
+}
